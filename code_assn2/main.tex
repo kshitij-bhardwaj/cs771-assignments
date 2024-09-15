@@ -1,0 +1,148 @@
+\documentclass{article}
+
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2023
+
+
+% ready for submission
+
+\usepackage[preprint]{neurips_2023}
+
+
+% to compile a preprint version, e.g., for submission to arXiv, add add the
+% [preprint] option:
+%     \usepackage[preprint]{neurips_2023}
+
+
+% to compile a camera-ready version, add the [final] option, e.g.:
+%     \usepackage[final]{neurips_2023}
+
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2023}
+
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\usepackage{graphicx}
+\usepackage{float}
+
+\title{Data Innovators - Report for Assignment 2 - CS771}
+
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+\author{%
+  1. Kshitij Bhardwaj - 230580\AND
+  2. Harsh Gupta - 230445\AND
+  3. Priyanka Arora - 230799\AND
+  4. Parnika Mittal - 230736\AND
+  5. Harshit Agarwal - 230458\AND
+  %6. Gyanesh Sharan - 231190604\\
+}
+
+
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+  This report describes the development of a decision tree model for word prediction using bigrams (adjacent character pairs) as features. The model aims to predict a single word based on a list of bigrams. The report outlines the design decisions taken for the model, including feature engineering, the decision tree algorithm, and hyperparameters. 
+  \end{abstract}
+  
+  \section{Decision Tree Algorithm}
+  
+  \subsection{Splitting Criterion - Entropy}
+  1. Precision on Gini Criterion: 0.3783626862783046\\
+  2. Precision on Entropy Criterion: 0.4337139539384556 \\
+
+  Why Entropy Might Be More Suitable for This Specific Bigram Prediction Problem?\\
+
+Entropy: Measures the overall uncertainty or randomness in a dataset. Higher entropy indicates more uncertainty about the correct class (word) for a given bigram feature.\\
+Gini Impurity: Focuses on the probability of misclassifying a sample if randomly drawn from a node. Lower Gini impurity implies a better separation between classes.\\
+
+Reasoning for Better Performance with Entropy:\\
+
+1. Bigram Ambiguity: Bigrams might be ambiguous and not uniquely identify a specific word. For example, the bigram "th" could appear in words like "the," "this," "thing," etc.\\
+2. Entropy Captures Ambiguity: Entropy inherently penalizes uncertainty and aims to distribute samples across all possible classes (words) for a given bigram. This can be beneficial when dealing with ambiguous features like bigrams.\\
+
+Imagine a dataset with bigrams "th" and "yi" and three words: "the" (2 occurrences), "thing" (1 occurrence), and "playing" (1 occurrence).\\
+\begin{equation}
+  Gini = 1 - \sum_{i=1}^{C}(p_i)^{2}
+\end{equation}
+Gini Impurity Calculation:\\
+  - Node with bigram "th": Classes (words) - "the" (2) and "thing" (1).\\
+  - Gini impurity = $1 - (0.64^2 + 0.36^2) = 0.384$\\
+  - Node with bigram "yi": Class (word) - "playing" (1).\\
+  - Gini impurity = $1 - 1^2 = 0$\\
+\begin{equation}
+  E(S) = \sum_{i=1}^{c}-p_i log_2(pi)
+\end{equation}
+Entropy Calculation:\\
+  - Node with bigram "th": Entropy = - (2/4 * log2(2/4) + 1/4 * log2(1/4)) = 0.811\\
+  - Node with bigram "yi": Entropy = - (1/1 * log2(1/1)) = 0\\
+  - Overall Entropy (weighted average) might be slightly higher than Gini impurity.
+  \subsection{Stopping Criterion}
+  There are two main criteria that determine when to stop expanding a decision tree and make a node a leaf:\\
+
+1. Purity of the Node :`\textbf{max\_depth = None}`\\
+
+This criterion checks if all samples reaching a particular node in the tree belong to the same class (category). If so, the node is considered pure, and there's no need for further splitting. This is because the model can already make a confident prediction (the class) for any sample that reaches that node.\\
+To maximise this parameter usefulness, we set the 'max\_depth = None'\\
+If None, then nodes are expanded until all leaves are pure or until all leaves contain less than 'min\_samples\_split' samples.\\
+
+2. Minimum Samples Per Leaf : `\textbf{min\_samples\_leaf = 1}`\\
+
+This hyperparameter sets a threshold for the minimum number of samples allowed in a leaf node. Expanding the tree further might be pointless if there are very few samples remaining in a node. With too few samples, the decision tree might learn overly specific rules that don't generalize well to unseen data (underfitting).\\
+\begin{table}[h]
+  \begin{tabular}{|l|l|l|l|}
+  \hline
+  Parameter Value & 1      & 2      & 4      \\ \hline
+  Precision       & 0.4256 & 0.1661 & 0.0689 \\ \hline
+  \end{tabular}
+  \end{table}\\
+
+  The Relative gain in Model Size Reduction and Time Taken, does not override the loss in precision.
+
+  \subsection{Pruning : None}
+  Our Problem statement does not require external Pruning strategies, it well fits the data provided to output a respectable accuracy.
+  \subsection{Other Hyperparameters}
+
+  1. \textbf{min\_samples\_split : 2}\\
+  With a higher min\_samples\_split, the overall dataset might have more unique bigrams and next words, potentially leading to a higher initial entropy (H) before splitting.
+
+  Although there are chances that Information Gain is better overall after 3 layers or so, the precision always decreases on increasing the value.
+
+  \begin{table}[h]
+    \begin{tabular}{|l|l|l|l|}
+    \hline
+    Parameter Value & 2      & 3      & 4      \\ \hline
+    Precision       & 0.4337 & 0.2721 & 0.2106 \\ \hline
+    \end{tabular}
+    \end{table}
+  \begin{table}
+    
+  \end{table}
+  \section{References}
+  
+  1. \href{https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html}{scikit-learn DecisionTreeClassifier Documentation}\\
+  2. \href{https://towardsdatascience.com/decision-trees-explained-entropy-information-gain-gini-index-ccp-pruning-4d78070db36c}{Entropy, Info Gain, Gini Index and CCP Pruning Article}\\
+  3. \href{https://vzhang1999.medium.com/classification-tree-growing-and-pruning-with-python-code-grid-search-cost-complexity-function-b2e45e33a1a4}{Article on Classification Trees Pruning Optimization with GridSearchCV and Cost Complexity Fn.}
+\end{document}
